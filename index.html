@@ -2,70 +2,70 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Cây thông điều khiển bằng tay</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Merry Christmas 🎄</title>
   <style>
-    body {
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
-      background: radial-gradient(circle at top, #0f2a44, #06121f);
+      background: #000;
+      touch-action: none;
     }
-    video {
-      position: fixed;
-      right: 10px;
-      bottom: 10px;
-      width: 160px;
-      border-radius: 12px;
-      opacity: 0.4;
-    }
-    #tree {
+
+    .tree {
       position: absolute;
-      font-size: 120px;
+      width: 180px;
+      pointer-events: none;
       transform: translate(-50%, -50%);
-      filter: drop-shadow(0 0 20px gold);
+    }
+
+    .photos {
+      position: absolute;
+      width: 60px;
+      border-radius: 8px;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
-<video id="video" autoplay playsinline></video>
-<div id="tree">🎄</div>
+  <!-- CÂY THÔNG (dùng image1 làm thân cây) -->
+  <img src="image1.jpeg" class="tree" id="tree">
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <!-- ẢNH TRANG TRÍ -->
+  <img src="image2.jpeg" class="photos">
+  <img src="image3.jpeg" class="photos">
+  <img src="image4.jpeg" class="photos">
+  <img src="image5.jpeg" class="photos">
 
-<script>
-  const video = document.getElementById("video");
-  const tree = document.getElementById("tree");
+  <script>
+    const tree = document.getElementById("tree");
+    const photos = document.querySelectorAll(".photos");
 
-  const hands = new Hands({
-    locateFile: (file) =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-  });
+    function moveTree(x, y) {
+      tree.style.left = x + "px";
+      tree.style.top = y + "px";
 
-  hands.setOptions({
-    maxNumHands: 1,
-    minDetectionConfidence: 0.7,
-    minTrackingConfidence: 0.7,
-  });
+      photos.forEach((img, index) => {
+        const angle = (index / photos.length) * Math.PI * 2;
+        const radius = 70;
 
-  hands.onResults((results) => {
-    if (results.multiHandLandmarks.length > 0) {
-      const p = results.multiHandLandmarks[0][9];
-      tree.style.left = p.x * window.innerWidth + "px";
-      tree.style.top = p.y * window.innerHeight + "px";
+        img.style.left = x + Math.cos(angle) * radius + "px";
+        img.style.top = y + Math.sin(angle) * radius + "px";
+      });
     }
-  });
 
-  const camera = new Camera(video, {
-    onFrame: async () => {
-      await hands.send({ image: video });
-    },
-    width: 640,
-    height: 480,
-  });
-
-  camera.start();
-</script>
+    document.addEventListener("pointermove", (e) => {
+      moveTree(e.clientX, e.clientY);
+    });
+  </script>
 
 </body>
 </html>
