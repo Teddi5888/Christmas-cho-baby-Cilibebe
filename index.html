@@ -2,59 +2,79 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Cây thông Noel</title>
+  <title>Cây thông điều khiển bằng tay</title>
   <style>
     body {
       margin: 0;
-      height: 100vh;
-      background: radial-gradient(circle at top, #0f2a44, #06121f);
       overflow: hidden;
-      cursor: none;
+      background: radial-gradient(circle at top, #0f2a44, #06121f);
+      color: white;
+      font-family: sans-serif;
     }
-
-    .tree {
+    video {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      width: 160px;
+      border-radius: 12px;
+      opacity: 0.4;
+    }
+    #tree {
       position: absolute;
       font-size: 120px;
       pointer-events: none;
-      filter: drop-shadow(0 0 20px #ffd700);
-      transition: transform 0.05s linear;
-    }
-
-    .sparkle {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      background: #fff7c2;
-      border-radius: 50%;
-      pointer-events: none;
-      animation: fade 1s forwards;
-    }
-
-    @keyframes fade {
-      from { opacity: 1; transform: scale(1); }
-      to { opacity: 0; transform: scale(3); }
+      filter: drop-shadow(0 0 20px gold);
+      transform: translate(-50%, -50%);
     }
   </style>
 </head>
 <body>
 
-  <div class="tree" id="tree">🎄</div>
+  <video id="video" autoplay playsinline></video>
+  <div id="tree">🎄</div>
+
+  <!-- MediaPipe -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
   <script>
+    const videoElement = document.getElementById("video");
     const tree = document.getElementById("tree");
 
-    document.addEventListener("mousemove", (e) => {
-      tree.style.left = e.clientX - 60 + "px";
-      tree.style.top = e.clientY - 60 + "px";
-
-      const s = document.createElement("div");
-      s.className = "sparkle";
-      s.style.left = e.clientX + "px";
-      s.style.top = e.clientY + "px";
-      document.body.appendChild(s);
-
-      setTimeout(() => s.remove(), 1000);
+    const hands = new Hands({
+      locateFile: (file) =>
+        `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
     });
+
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.7,
+    });
+
+    hands.onResults((results) => {
+      if (results.multiHandLandmarks.length > 0) {
+        const hand = results.multiHandLandmarks[0];
+        const palm = hand[9]; // trung tâm bàn tay
+
+        const x = palm.x * window.innerWidth;
+        const y = palm.y * window.innerHeight;
+
+        tree.style.left = x + "px";
+        tree.style.top = y + "px";
+      }
+    });
+
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await hands.send({ image: videoElement });
+      },
+      width: 640,
+      height: 480,
+    });
+
+    camera.start();
   </script>
 
 </body>
