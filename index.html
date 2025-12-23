@@ -8,8 +8,6 @@
       margin: 0;
       overflow: hidden;
       background: radial-gradient(circle at top, #0f2a44, #06121f);
-      color: white;
-      font-family: sans-serif;
     }
     video {
       position: fixed;
@@ -22,60 +20,52 @@
     #tree {
       position: absolute;
       font-size: 120px;
-      pointer-events: none;
-      filter: drop-shadow(0 0 20px gold);
       transform: translate(-50%, -50%);
+      filter: drop-shadow(0 0 20px gold);
     }
   </style>
 </head>
 <body>
 
-  <video id="video" autoplay playsinline></video>
-  <div id="tree">🎄</div>
+<video id="video" autoplay playsinline></video>
+<div id="tree">🎄</div>
 
-  <!-- MediaPipe -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
-  <script>
-    const videoElement = document.getElementById("video");
-    const tree = document.getElementById("tree");
+<script>
+  const video = document.getElementById("video");
+  const tree = document.getElementById("tree");
 
-    const hands = new Hands({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-    });
+  const hands = new Hands({
+    locateFile: (file) =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+  });
 
-    hands.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.7,
-    });
+  hands.setOptions({
+    maxNumHands: 1,
+    minDetectionConfidence: 0.7,
+    minTrackingConfidence: 0.7,
+  });
 
-    hands.onResults((results) => {
-      if (results.multiHandLandmarks.length > 0) {
-        const hand = results.multiHandLandmarks[0];
-        const palm = hand[9]; // trung tâm bàn tay
+  hands.onResults((results) => {
+    if (results.multiHandLandmarks.length > 0) {
+      const p = results.multiHandLandmarks[0][9];
+      tree.style.left = p.x * window.innerWidth + "px";
+      tree.style.top = p.y * window.innerHeight + "px";
+    }
+  });
 
-        const x = palm.x * window.innerWidth;
-        const y = palm.y * window.innerHeight;
+  const camera = new Camera(video, {
+    onFrame: async () => {
+      await hands.send({ image: video });
+    },
+    width: 640,
+    height: 480,
+  });
 
-        tree.style.left = x + "px";
-        tree.style.top = y + "px";
-      }
-    });
-
-    const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        await hands.send({ image: videoElement });
-      },
-      width: 640,
-      height: 480,
-    });
-
-    camera.start();
-  </script>
+  camera.start();
+</script>
 
 </body>
 </html>
